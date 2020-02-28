@@ -1,4 +1,4 @@
-![Photon | Smart Temperature and Humidity Monitoring]()
+![Photon | Smart Temperature and Humidity Monitoring](https://i.imgur.com/gAgdMVL.png)
 
 ## Photon | Temperature and Humidity Monitoring via MQTT for Home Assistant
 
