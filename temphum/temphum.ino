@@ -25,6 +25,9 @@ char mqtt_port[6] = "1883";
 
 char mqtt_user[60] = "Username";
 char mqtt_pass[100] = "Password";
+char mqtt_Ttopic[200] = "rooms/myroom/sensor/temp";
+char mqtt_Htopic[200] = "rooms/myroom/sensor/humi";
+
 
 unsigned long lastMsg = 0;
 #define MSG_BUFFER_SIZE  (50)
@@ -36,6 +39,7 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 
 
+
 const long utcOffsetInSeconds = 3600;
 unsigned long previousMillis = 0;        // will store last time LED was updated
 const long interval = 30000;           // interval at which to blink (milliseconds)
@@ -43,7 +47,6 @@ const long interval = 30000;           // interval at which to blink (millisecon
 
 Adafruit_BME280 bme; // use I2C interface
 Adafruit_Sensor *bme_temp = bme.getTemperatureSensor();
-Adafruit_Sensor *bme_pressure = bme.getPressureSensor();
 Adafruit_Sensor *bme_humidity = bme.getHumiditySensor();
 
 
@@ -122,7 +125,6 @@ void getSensorInfo() {
 
     sensors_event_t temp_event, pressure_event, humidity_event;
     bme_temp->getEvent(&temp_event);
-    bme_pressure->getEvent(&pressure_event);
     bme_humidity->getEvent(&humidity_event);
 
 
@@ -132,12 +134,12 @@ void getSensorInfo() {
     snprintf (msg, MSG_BUFFER_SIZE, temp.c_str());
     Serial.print("Publish message: ");
     Serial.println(msg);
-    client.publish("habs/edu/sensor/temp", msg);
+    client.publish(mqtt_Ttopic, msg);
 
     snprintf (msg, MSG_BUFFER_SIZE, humi.c_str());
     Serial.print("Publish message: ");
     Serial.println(msg);
-    client.publish("habs/edu/sensor/humi", msg);
+    client.publish(mqtt_Htopic, msg);
 
   }
 }
@@ -174,6 +176,8 @@ void setupSpiffs() {
           strcpy(mqtt_port, json["mqtt_port"]);
           strcpy(mqtt_user, json["mqtt_user"]);
           strcpy(mqtt_pass, json["mqtt_pass"]);
+          strcpy(mqtt_Ttopic, json["mqtt_Ttopic"]);
+          strcpy(mqtt_Htopic, json["mqtt_Htopic"]);
 
 
         } else {
@@ -241,10 +245,19 @@ void setup(void) {
   // The extra parameters to be configured (can be either global or just in the setup)
   // After connecting, parameter.getValue() will get you the configured value
   // id/name placeholder/prompt default length
+  WiFiManagerParameter custom_text1("<p>MQTT Server address</p>");
   WiFiManagerParameter custom_mqtt_server("server", "mqtt server", mqtt_server, 40);
+  WiFiManagerParameter custom_text2("<p>MQTT Server port (WARNING, NOT CURRENTLY FUNCTIONAL)</p>");
   WiFiManagerParameter custom_mqtt_port("port", "mqtt port", mqtt_port, 6);
+  WiFiManagerParameter custom_text3("<p>MQTT Username");
   WiFiManagerParameter custom_mqtt_user("user", "mqtt user", mqtt_user, 60);
+  WiFiManagerParameter custom_text4("<p>MQTT Password</p>");
   WiFiManagerParameter custom_mqtt_pass("pass", "mqtt pass", mqtt_pass, 100);
+  WiFiManagerParameter custom_text5("<p>MQTT Temperature Topic</p>");
+  WiFiManagerParameter custom_mqtt_Ttopic("Ttopic", "mqtt topic", mqtt_Ttopic, 200);
+  WiFiManagerParameter custom_text6("<p>MQTT Humidity Topic</p>");
+  WiFiManagerParameter custom_mqtt_Htopic("Htopic", "mqtt topic", mqtt_Htopic, 200);
+
 
 
   //Start WifiManager
@@ -252,14 +265,22 @@ void setup(void) {
 
   //WifiManager Configuration
   wifiManager.setConfigPortalTimeout(180);
-  wifiManager.setCustomHeadElement("<style>.c { text-align: center;}button {border:0;border-radius:0.5rem;color:white;line-height:2.4rem;font-size:1.2rem;width:100%;background: linear-gradient(to right, #ee0979, #ff6a00);} div,input {padding:10px;font-size:1em;background: white;border-radius: 5px;/*! top: auto; */}input { width: 90%}body { text-align: center; font-family:verdana; background: linear-gradient(to right, #36d1dc, #5b86e5); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */ /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */}button { border:0; border-radius:0.5rem; color:white; line-height:2.4rem; font-size:1.2rem; width:100%;  background: linear-gradient(to right, #00c6ff, #0072ff); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */}.q { float: right; width: 64px; text-align: right;}   </style>");
+  //wifiManager.setCustomHeadElement("");
   wifiManager.setSaveConfigCallback(saveConfigCallback);
 
   //Extra Params for MQTT
+  wifiManager.addParameter(&custom_text1);
   wifiManager.addParameter(&custom_mqtt_server);
+  wifiManager.addParameter(&custom_text2);
   wifiManager.addParameter(&custom_mqtt_port);
+  wifiManager.addParameter(&custom_text3);
   wifiManager.addParameter(&custom_mqtt_user);
+  wifiManager.addParameter(&custom_text4);
   wifiManager.addParameter(&custom_mqtt_pass);
+  wifiManager.addParameter(&custom_text5);
+  wifiManager.addParameter(&custom_mqtt_Ttopic);
+  wifiManager.addParameter(&custom_text6);
+  wifiManager.addParameter(&custom_mqtt_Htopic);
 
 
   u8g2.begin();
@@ -284,15 +305,21 @@ void setup(void) {
   strcpy(mqtt_port, custom_mqtt_port.getValue());
   strcpy(mqtt_user, custom_mqtt_user.getValue());
   strcpy(mqtt_pass, custom_mqtt_pass.getValue());
+  strcpy(mqtt_Ttopic, custom_mqtt_Ttopic.getValue());
+  strcpy(mqtt_Htopic, custom_mqtt_Htopic.getValue());
+
 
   if (shouldSaveConfig) {
     Serial.println("saving config");
     DynamicJsonBuffer jsonBuffer;
     JsonObject& json = jsonBuffer.createObject();
-    json["mqtt_server"] = mqtt_server;
-    json["mqtt_port"]   = mqtt_port;
-    json["mqtt_user"]   = mqtt_user;
-    json["mqtt_pass"]   = mqtt_pass;
+    json["mqtt_server"]    = mqtt_server;
+    json["mqtt_port"]      = mqtt_port;
+    json["mqtt_user"]      = mqtt_user;
+    json["mqtt_pass"]      = mqtt_pass;
+    json["mqtt_Ttopic"]    = mqtt_Ttopic;
+    json["mqtt_Htopic"]    = mqtt_Htopic;
+
 
     // json["ip"]          = WiFi.localIP().toString();
     // json["gateway"]     = WiFi.gatewayIP().toString();
@@ -325,6 +352,8 @@ void setup(void) {
   Serial.println(mqtt_port);
   Serial.println(mqtt_user);
   Serial.println(mqtt_pass);
+  Serial.println(mqtt_Htopic);
+  Serial.println(mqtt_Ttopic);
 
 
   temp = String(int(temp_event.temperature));
@@ -363,17 +392,16 @@ void setup(void) {
     }
   }
 
-  client.publish("habs/edu/sensor/boot", "Booted");
 
   snprintf (msg, MSG_BUFFER_SIZE, temp.c_str());
   Serial.print("Publish message: ");
   Serial.println(msg);
-  client.publish("habs/edu/sensor/temp", msg);
+  client.publish(mqtt_Ttopic, msg);
 
   snprintf (msg, MSG_BUFFER_SIZE, humi.c_str());
   Serial.print("Publish message: ");
   Serial.println(msg);
-  client.publish("habs/edu/sensor/humi", msg);
+  client.publish(mqtt_Htopic, msg);
 }
 
 void loop() {
