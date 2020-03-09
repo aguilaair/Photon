@@ -53,6 +53,9 @@ Adafruit_Sensor *bme_humidity = bme.getHumiditySensor();
 String temp = "50";
 String humi = "42.5";
 
+String tempS = "50";
+String humiS = "42.5";
+
 U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
 
 WiFiUDP ntpUDP;
@@ -128,15 +131,15 @@ void getSensorInfo() {
     bme_humidity->getEvent(&humidity_event);
 
 
-    temp = String(int(temp_event.temperature));
-    humi = String(int(humidity_event.relative_humidity));
+    tempS = String(temp_event.temperature);
+    humiS = String(humidity_event.relative_humidity);
 
-    snprintf (msg, MSG_BUFFER_SIZE, temp.c_str());
+    snprintf (msg, MSG_BUFFER_SIZE, tempS.c_str());
     Serial.print("Publish message: ");
     Serial.println(msg);
     client.publish(mqtt_Ttopic, msg);
 
-    snprintf (msg, MSG_BUFFER_SIZE, humi.c_str());
+    snprintf (msg, MSG_BUFFER_SIZE, humiS.c_str());
     Serial.print("Publish message: ");
     Serial.println(msg);
     client.publish(mqtt_Htopic, msg);
@@ -359,6 +362,8 @@ void setup(void) {
   temp = String(int(temp_event.temperature));
   humi = String(int(humidity_event.relative_humidity));
 
+  tempS = String(temp_event.temperature);
+  humiS = String(humidity_event.relative_humidity);
   
 
   //Sync RTC
@@ -393,12 +398,12 @@ void setup(void) {
   }
 
 
-  snprintf (msg, MSG_BUFFER_SIZE, temp.c_str());
+  snprintf (msg, MSG_BUFFER_SIZE, tempS.c_str());
   Serial.print("Publish message: ");
   Serial.println(msg);
   client.publish(mqtt_Ttopic, msg);
 
-  snprintf (msg, MSG_BUFFER_SIZE, humi.c_str());
+  snprintf (msg, MSG_BUFFER_SIZE, humiS.c_str());
   Serial.print("Publish message: ");
   Serial.println(msg);
   client.publish(mqtt_Htopic, msg);
