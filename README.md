@@ -57,4 +57,4 @@ name: "Humedad"
 icon: mdi:water
 ```
 
-Great job! There is only one more step! Let's make it show it to us on the front page by adding it via Lovelace UI. I ban you laredy know how to do it right? no? fine... I'll put up an example ASAP :)
+Great job! There is only one more step! Let's make it show it to us on the front page by adding it via Lovelace UI. I hope you already know how to do it. Right? no? fine... I'll put up an example soonTM :)
