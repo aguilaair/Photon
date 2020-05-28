@@ -16,7 +16,7 @@ Welcome! This simple project is a great way to start learning the basics of Ardu
 ## Setting up
 
  1. Download all of the libaries and insert them into your IDE
- 2. Open the temphum.ion file and upload it into the board
+ 2. Open the temphum.ino file and upload it into the board
  3.  Set up the board connection like shown below
  4.  Connect to the generated hotspot
  5. Configure Wifi details and MQTT info using the web interface
